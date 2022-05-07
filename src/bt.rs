@@ -1,5 +1,9 @@
-use bevy::prelude::{Component, Query};
+use bevy::{
+    ecs::{component::Component, query::WorldQuery, world::Mut},
+    prelude::Query,
+};
 
+use std::fmt::Debug;
 use std::sync::Arc;
 
 #[derive(PartialEq, Eq)]
@@ -31,12 +35,15 @@ pub enum Status {
 //         .insert(BasicBotBehaviorTree);
 // app.add_system(tick_behavior_tree);
 
-#[derive(Component)]
-pub struct BehaviorTree {
-    pub root: Sequence,
+#[derive(WorldQuery, Component)]
+#[world_query(mutable, derive(Debug))]
+pub struct BehaviorTree<'w, T: Tickable + Component> {
+    pub root: &'w mut T,
 }
 
-pub fn tick_behavior_trees(mut bt_query: Query<&mut BehaviorTree>) {
+// We should tick all trees!
+// We can add an option time/frame delay to not tick them every frame
+pub fn tick_behavior_trees<T: Tickable + Component>(mut bt_query: Query<&mut BehaviorTree<'static, T>>) {
     for mut bt in bt_query.iter_mut() {
         bt.root.tick();
     }
@@ -52,6 +59,7 @@ impl Tickable for Action {
     }
 }
 
+#[derive(Component)]
 pub struct Sequence {
     // Of course sequences can have non Actions as children...
     // Probalby needs a Vec of T where T is tickable?
@@ -74,21 +82,6 @@ impl Tickable for Sequence {
     }
 }
 
-//impl Tick for Action {
-//    fn tick(&self) -> Status {
-//        return (self.func)()
-//    }
-//}
-
-trait Tickable: Send + Sync {
+pub trait Tickable: Send + Sync {
     fn tick(&mut self) -> Status;
 }
-
-//impl<T> Tick for T
-//where
-//    T: Component + Send + Sync,
-//{
-//    fn tick(&mut self) -> Status {
-//        Status::Running
-//    }
-//}
