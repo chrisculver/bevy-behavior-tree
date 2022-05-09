@@ -22,6 +22,14 @@ pub struct BehaviorTree {
     root: Arc<Mutex<dyn Node + Send + Sync>>,
 }
 
+impl BehaviorTree {
+    pub fn new(new_root: Arc<Mutex<dyn Node + Send + Sync>>) -> BehaviorTree {
+        BehaviorTree {
+            root: new_root
+        }
+    }
+}
+
 #[derive(Component)]
 pub struct Action {
     pub func: Arc<dyn Fn() -> Status + Send + Sync>,
@@ -42,8 +50,8 @@ macro_rules! action {
 
 #[derive(Component)]
 pub struct Sequence {
-    children: Vec<Arc<Mutex<dyn Node + Send + Sync>>>,
-    active: usize,
+    pub children: Vec<Arc<Mutex<dyn Node + Send + Sync>>>,
+    pub active: usize,
 }
 
 // TODO: Test this is the correct behavior.
@@ -82,27 +90,4 @@ pub fn test_run_bts(mut bt_query: Query<&mut BehaviorTree>) {
     for bt in bt_query.iter_mut() {
         bt.root.lock().unwrap().tick();
     }
-}
-
-pub fn create_basic_bt() -> BehaviorTree {
-    BehaviorTree {
-        root: sequence![
-                action!(always_succeed),
-                sequence![
-                        action!(always_succeed),
-                        action!(always_succeed),
-                        action!(always_fail)
-                        ]
-                ],
-        }
-}
-
-pub fn always_succeed() -> Status {
-    println!("Action always succeed");
-    return Status::Success;
-}
-
-pub fn always_fail() -> Status {
-    println!("Action always fail");
-    return Status::Failure;
 }
