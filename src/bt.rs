@@ -13,7 +13,6 @@ pub enum Status {
     Running,
 }
 
-
 pub trait Node {
     fn tick(&mut self) -> Status;
 }
@@ -34,10 +33,17 @@ impl Node for Action {
     }
 }
 
+#[macro_export]
+macro_rules! action {
+    ( $e:expr ) => {
+        Arc::new(Mutex::new(Action { func: Arc::new($e) }))
+    };
+}
+
 #[derive(Component)]
 pub struct Sequence {
-    pub children: Vec<Arc<Mutex<dyn Node + Send + Sync>>>,
-    pub active: usize,
+    children: Vec<Arc<Mutex<dyn Node + Send + Sync>>>,
+    active: usize,
 }
 
 // TODO: Test this is the correct behavior.
@@ -60,6 +66,17 @@ impl Node for Sequence {
     }
 }
 
+#[macro_export]
+macro_rules! sequence
+{
+	( $( $e:expr ),* ) => {
+		Arc::new(Mutex::new(Sequence {
+            children: vec![$( $e ),*],
+            active: 0
+        }))
+	};
+}
+
 
 pub fn test_run_bts(mut bt_query: Query<&mut BehaviorTree>) {
     for bt in bt_query.iter_mut() {
@@ -67,32 +84,17 @@ pub fn test_run_bts(mut bt_query: Query<&mut BehaviorTree>) {
     }
 }
 
-
 pub fn create_basic_bt() -> BehaviorTree {
     BehaviorTree {
-        root: Arc::new(Mutex::new(Sequence {
-            children: vec![
-                Arc::new(Mutex::new(Action {
-                    func: Arc::new(always_succeed),
-                })),
-                Arc::new(Mutex::new(Sequence {
-                    children: vec![
-                        Arc::new(Mutex::new(Action {
-                            func: Arc::new(always_succeed),
-                        })),
-                        Arc::new(Mutex::new(Action {
-                            func: Arc::new(always_succeed),
-                        })),
-                        Arc::new(Mutex::new(Action {
-                            func: Arc::new(always_fail),
-                        })),
-                    ],
-                    active: 0,
-                })),
-            ],
-            active: 0,
-        })),
-    }
+        root: sequence![
+                action!(always_succeed),
+                sequence![
+                        action!(always_succeed),
+                        action!(always_succeed),
+                        action!(always_fail)
+                        ]
+                ],
+        }
 }
 
 pub fn always_succeed() -> Status {

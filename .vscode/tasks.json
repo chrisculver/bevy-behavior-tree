@@ -1,0 +1,50 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+        "label": "cargo fmt",
+        "type": "shell",
+        "command": "cargo fmt; cargo check", 
+        "group": {
+            "kind": "build",
+            "isDefault": true
+        }
+    },
+    {
+        "label": "cargo run",
+        "type": "shell",
+        "command": "cargo fmt; cargo run", 
+        "group": {
+            "kind": "build",
+            "isDefault": true
+        }
+    },
+    {
+        "label": "cargo clean",
+        "type": "shell",
+        "command": "cargo clean", 
+        "group": {
+            "kind": "build",
+            "isDefault": true
+        }
+    },
+    {
+        "label": "cargo test behavior-tree",
+        "type": "shell",
+        "command": "cd src/behavior-tree; cargo fmt; cargo test", 
+        "group": {
+            "kind": "build",
+            "isDefault": true
+        }
+    },
+    {
+        "label": "cargo bench behavior-tree",
+        "type": "shell",
+        "command": "cd src/behavior-tree; cargo fmt; cargo bench", 
+        "group": {
+            "kind": "build",
+            "isDefault": true
+        }
+    },
+  ]
+}
